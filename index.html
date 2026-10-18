@@ -1,0 +1,2133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Конструктор Интерактивных Книг "Живая Книга"</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Comfortaa:wght@400;600;700&family=Marck+Script&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg-dark: #0a0814;
+      --bg-card: rgba(23, 18, 41, 0.85);
+      --bg-parchment: #fcf8e8;
+      --parchment-text: #2c1810;
+      --primary-gold: #ffd700;
+      --accent-gold: #f39c12;
+      --magic-purple: #8a2be2;
+      --magic-cyan: #00f3ff;
+      --glow-purple: 0 0 15px rgba(138, 43, 226, 0.6);
+      --glow-gold: 0 0 15px rgba(255, 215, 0, 0.6);
+      --glow-cyan: 0 0 15px rgba(0, 243, 255, 0.6);
+      --border-magic: 1px solid rgba(255, 215, 0, 0.3);
+      --font-title: 'Cinzel', serif;
+      --font-body: 'Comfortaa', cursive;
+      --font-hand: 'Marck Script', cursive;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(138, 43, 226, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(0, 243, 255, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(15, 10, 30, 0.9) 0%, #05030a 100%);
+      color: #e0e0ff;
+      font-family: var(--font-body);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      height: 55px;
+      background: rgba(12, 9, 26, 0.9);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      z-index: 100;
+    }
+
+    .app-title {
+      font-family: var(--font-title);
+      font-size: 1.4rem;
+      color: var(--primary-gold);
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-lang-select {
+      background: rgba(10, 7, 22, 0.8);
+      border: var(--border-magic);
+      color: var(--primary-gold);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .workspace {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 55px);
+      overflow: hidden;
+    }
+
+    .editor-panel {
+      width: 35%;
+      min-width: 380px;
+      background: var(--bg-card);
+      backdrop-filter: blur(10px);
+      border-right: 1px solid rgba(255, 215, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 5px 0 25px rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+
+    .editor-tabs {
+      display: flex;
+      background: rgba(8, 5, 18, 0.8);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+      overflow-x: auto;
+    }
+
+    .editor-tabs::-webkit-scrollbar {
+      height: 3px;
+    }
+
+    .editor-tabs::-webkit-scrollbar-thumb {
+      background: var(--accent-gold);
+    }
+
+    .tab-btn {
+      padding: 12px 14px;
+      background: transparent;
+      border: none;
+      color: #9a94b8;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 2px solid transparent;
+    }
+
+    .tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      color: var(--primary-gold);
+      border-bottom-color: var(--primary-gold);
+      background: rgba(138, 43, 226, 0.2);
+      text-shadow: var(--glow-gold);
+    }
+
+    .tab-content-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .tab-content-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .tab-content-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 215, 0, 0.3);
+      border-radius: 3px;
+    }
+
+    .tab-panel {
+      display: none;
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--primary-gold);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .form-control, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: rgba(10, 7, 22, 0.7);
+      border: var(--border-magic);
+      border-radius: 8px;
+      color: #f0f0ff;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--magic-cyan);
+      box-shadow: var(--glow-cyan);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .btn-magic {
+      background: linear-gradient(135deg, var(--magic-purple), #4b0082);
+      color: #fff;
+      border: 1px solid var(--primary-gold);
+      box-shadow: var(--glow-purple);
+    }
+
+    .btn-magic:hover {
+      background: linear-gradient(135deg, #a033ff, #6a00ba);
+      box-shadow: 0 0 20px rgba(160, 51, 255, 0.8);
+      transform: translateY(-2px);
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #f39c12, #d35400);
+      color: #fff;
+      border: 1px solid var(--primary-gold);
+    }
+
+    .btn-gold:hover {
+      background: linear-gradient(135deg, #f1c40f, #e67e22);
+      box-shadow: var(--glow-gold);
+      transform: translateY(-2px);
+    }
+
+    .btn-danger {
+      background: rgba(217, 83, 79, 0.2);
+      color: #ff6b6b;
+      border: 1px solid #d9534f;
+    }
+
+    .btn-danger:hover {
+      background: #d9534f;
+      color: #fff;
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    .page-list-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+
+    .page-chip {
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,215,0,0.2);
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      transition: all 0.3s;
+    }
+
+    .page-chip.active {
+      background: var(--primary-gold);
+      color: #000;
+      font-weight: bold;
+      box-shadow: var(--glow-gold);
+    }
+
+    .preview-panel {
+      width: 65%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: rgba(5, 3, 10, 0.95);
+      position: relative;
+    }
+
+    .mode-bar {
+      height: 50px;
+      background: rgba(15, 10, 30, 0.9);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      padding: 0 20px;
+    }
+
+    .mode-btn {
+      padding: 8px 18px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255, 215, 0, 0.2);
+      color: #aaa;
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mode-btn.active {
+      background: linear-gradient(90deg, #8a2be2, #00f3ff);
+      color: #fff;
+      border-color: #fff;
+      box-shadow: var(--glow-cyan);
+      font-weight: bold;
+    }
+
+    .canvas-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .book-stage {
+      width: 100%;
+      max-width: 850px;
+      height: 100%;
+      max-height: 580px;
+      background-color: var(--bg-parchment);
+      border-radius: 12px;
+      box-shadow: 0 0 35px rgba(0,0,0,0.8), inset 0 0 50px rgba(139, 69, 19, 0.2);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      color: var(--parchment-text);
+      border: 8px solid #2a1a08;
+      transition: all 0.3s ease;
+    }
+
+    .cover-view {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1f0d3d, #0d061a);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      text-align: center;
+      border: 12px solid #3d2608;
+      box-shadow: inset 0 0 80px rgba(0,0,0,0.9);
+      position: relative;
+    }
+
+    .cover-title {
+      font-family: var(--font-title);
+      font-size: 2.8rem;
+      color: var(--primary-gold);
+      text-shadow: var(--glow-gold);
+      margin-bottom: 20px;
+    }
+
+    .cover-subtitle {
+      font-size: 1.2rem;
+      color: #d1c4e9;
+      margin-bottom: 40px;
+      font-family: var(--font-hand);
+    }
+
+    .canvas-element {
+      position: absolute;
+      cursor: grab;
+      transition: border 0.2s;
+      padding: 8px;
+    }
+
+    .canvas-element.dragging {
+      cursor: grabbing;
+      opacity: 0.8;
+      z-index: 1000 !important;
+    }
+
+    .edit-mode .canvas-element:hover {
+      outline: 2px dashed var(--magic-purple);
+    }
+
+    .page-text-render {
+      font-size: 1.2rem;
+      line-height: 1.6;
+      color: #2c1810;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .highlight-word {
+      background-color: rgba(255, 215, 0, 0.6);
+      border-radius: 4px;
+      padding: 0 2px;
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+      transition: background-color 0.2s;
+    }
+
+    .page-img-render {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .trigger-task-btn {
+      background: linear-gradient(135deg, #ff007f, #7928ca);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 30px;
+      border: 2px solid var(--primary-gold);
+      font-family: var(--font-body);
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: var(--glow-purple);
+      animation: pulse 2s infinite;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 10px rgba(255,0,127,0.5); }
+      50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(255,0,127,0.9); }
+      100% { transform: scale(1); box-shadow: 0 0 10px rgba(255,0,127,0.5); }
+    }
+
+    .book-controls {
+      position: absolute;
+      bottom: 15px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 25px;
+      pointer-events: none;
+    }
+
+    .book-controls * {
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: rgba(30, 20, 50, 0.8);
+      border: 1px solid var(--primary-gold);
+      color: var(--primary-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: all 0.3s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    .nav-btn:hover {
+      background: var(--primary-gold);
+      color: #000;
+      box-shadow: var(--glow-gold);
+      transform: scale(1.1);
+    }
+
+    .task-modal-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(8, 5, 20, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .task-modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .task-card {
+      width: 90%;
+      max-width: 550px;
+      background: linear-gradient(135deg, #1c1335, #0d081e);
+      border: 2px solid var(--primary-gold);
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: var(--glow-purple);
+      color: #fff;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .task-modal-overlay.active .task-card {
+      transform: translateY(0);
+    }
+
+    .task-question {
+      font-family: var(--font-title);
+      color: var(--primary-gold);
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+    }
+
+    .task-option {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+    }
+
+    .task-option:hover {
+      background: rgba(138, 43, 226, 0.3);
+      border-color: var(--magic-cyan);
+    }
+
+    .task-option input {
+      accent-color: var(--primary-gold);
+      transform: scale(1.2);
+    }
+
+    .match-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .match-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .match-row span {
+      flex: 1;
+      font-size: 0.9rem;
+    }
+    .match-row select {
+      flex: 1;
+    }
+
+    .feedback-view {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #100a26, #05020f);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      text-align: center;
+      color: #fff;
+    }
+
+    .badge-icon {
+      font-size: 4rem;
+      color: var(--primary-gold);
+      text-shadow: var(--glow-gold);
+      margin-bottom: 15px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .code-box {
+      width: 100%;
+      height: 120px;
+      background: #05030a;
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 8px;
+      color: #00f3ff;
+      font-family: monospace;
+      font-size: 0.75rem;
+      padding: 10px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="app-title">
+      <i class="fa-solid fa-book-bookmark"></i>
+      <span id="ui-header-title">Живая Книга | Редактор</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <select id="global-lang-select" class="header-lang-select" onchange="app.changeLanguage(this.value)">
+        <option value="ru">Русский</option>
+        <option value="en">English</option>
+        <option value="de">Deutsch</option>
+        <option value="fr">Français</option>
+        <option value="it">Italiano</option>
+        <option value="es">Español</option>
+      </select>
+      <div style="font-size:0.85rem; color:#8a85a5;" id="ui-header-sub">
+        Интерактивный Сказочный Конструктор
+      </div>
+    </div>
+  </header>
+
+  <div class="workspace">
+
+    <div class="editor-panel">
+      <div class="editor-tabs">
+        <button class="tab-btn active" onclick="app.switchTab('content')">
+          <i class="fa-solid fa-file-pen"></i> <span data-i18n="tabContent">Контент</span>
+        </button>
+        <button class="tab-btn" onclick="app.switchTab('audio')">
+          <i class="fa-solid fa-volume-high"></i> <span data-i18n="tabAudio">Аудио & TTS</span>
+        </button>
+        <button class="tab-btn" onclick="app.switchTab('tasks')">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="tabTasks">Задания</span>
+        </button>
+        <button class="tab-btn" onclick="app.switchTab('design')">
+          <i class="fa-solid fa-palette"></i> <span data-i18n="tabDesign">Дизайн</span>
+        </button>
+        <button class="tab-btn" onclick="app.switchTab('export')">
+          <i class="fa-solid fa-box-archive"></i> <span data-i18n="tabExport">Экспорт</span>
+        </button>
+      </div>
+
+      <div class="tab-content-container">
+
+        <div id="tab-content" class="tab-panel active">
+          <div class="form-group">
+            <label><span data-i18n="pagesLbl">Страницы книги</span> (<span id="page-count-lbl">1</span>/50):</label>
+            <div class="page-list-bar" id="page-chip-list"></div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-magic" onclick="app.addPage()"><i class="fa-solid fa-plus"></i> <span data-i18n="newPageBtn">Новая страница</span></button>
+              <button class="btn btn-danger" onclick="app.deleteCurrentPage()"><i class="fa-solid fa-trash"></i> <span data-i18n="delPageBtn">Удалить</span></button>
+            </div>
+          </div>
+
+          <hr style="border-color:rgba(255,215,0,0.1); margin:15px 0;">
+
+          <div class="form-group">
+            <label data-i18n="bookTitleLbl">Заголовок Книги (Обложка):</label>
+            <input type="text" id="input-book-title" class="form-control" oninput="app.updateBookInfo()">
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="bookAuthorLbl">Подзаголовок / Автор:</label>
+            <input type="text" id="input-book-author" class="form-control" oninput="app.updateBookInfo()">
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="pageTextLbl">Текст текущей страницы:</label>
+            <textarea id="input-page-text" class="form-control" oninput="app.updateCurrentPageText()" placeholder="Впишите волшебную историю..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="pageImgLbl">URL Изображения страницы:</label>
+            <input type="text" id="input-page-img" class="form-control" placeholder="https://example.com/image.png" oninput="app.updateCurrentPageImage()">
+          </div>
+        </div>
+
+        <div id="tab-audio" class="tab-panel">
+          <div class="form-group">
+            <label data-i18n="ttsVoiceLbl">Голос озвучки (TTS):</label>
+            <select id="tts-voice-select" class="form-control" onchange="app.state.tts.voiceIndex = this.value"></select>
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="ttsPitchLbl">Высота голоса (Pitch):</label>
+            <input type="range" id="tts-pitch" min="0.5" max="1.5" step="0.1" value="1" class="form-control" oninput="app.state.tts.pitch = parseFloat(this.value)">
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="ttsRateLbl">Скорость речи (Rate):</label>
+            <input type="range" id="tts-rate" min="0.5" max="1.5" step="0.1" value="1" class="form-control" oninput="app.state.tts.rate = parseFloat(this.value)">
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="flipSoundLbl">Звуковой эффект перелистывания страниц:</label>
+            <select id="flip-sound-select" class="form-control" onchange="app.state.soundFX.type = this.value">
+              <option value="parchment">1. Классический пергамент (Parchment Rustle)</option>
+              <option value="chime">2. Магический перезвон (Magic Chime)</option>
+              <option value="whoosh">3. Взмах крыла / Ветряной шлейф (Wind & Whoosh)</option>
+              <option value="softpaper">4. Мягкое шуршание бумаги (Soft Paper)</option>
+              <option value="click">5. Щелчок страницы (Digital Click)</option>
+              <option value="none">6. Без звука (None)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="volumeLbl">Глобальная громкость звуков:</label>
+            <input type="range" id="sound-volume" min="0" max="1" step="0.05" value="0.8" class="form-control" oninput="app.soundFX.setVolume(this.value)">
+          </div>
+
+          <div class="form-group" style="display:flex; gap:10px;">
+            <button class="btn btn-gold" style="flex:1;" onclick="app.soundFX.playCurrentFlip()">
+              <i class="fa-solid fa-volume-high"></i> <span data-i18n="testSoundBtn">Тест Звука</span>
+            </button>
+            <button class="btn btn-magic" style="flex:1;" onclick="app.testTTS()">
+              <i class="fa-solid fa-play"></i> <span data-i18n="testTtsBtn">Тест TTS</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="tab-tasks" class="tab-panel">
+          <div class="form-group">
+            <label><input type="checkbox" id="task-enable-chk" onchange="app.toggleTaskForPage(this.checked)"> <span data-i18n="enableTaskLbl">Включить задание на этой странице</span></label>
+          </div>
+
+          <div id="task-editor-section" style="display:none;">
+            <div class="form-group">
+              <label data-i18n="taskTypeLbl">Тип задания:</label>
+              <select id="task-type-select" class="form-control" onchange="app.updateTaskType(this.value)">
+                <option value="single">Один верный ответ (Radio)</option>
+                <option value="multiple">Несколько верных ответов (Checkbox)</option>
+                <option value="matching">Соотношение (Найди пару)</option>
+                <option value="input">Впиши верный ответ (Текст)</option>
+                <option value="select">Выпадающий список (Select)</option>
+                <option value="oral">Устный ответ (Игрок отвечает устно)</option>
+                <option value="embed">Вставка стороннего сервиса (Iframe / Ссылка)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label data-i18n="taskQuestionLbl">Вопрос / Текст задания:</label>
+              <input type="text" id="task-question-input" class="form-control" placeholder="Введите вопрос..." oninput="app.updateTaskData()">
+            </div>
+
+            <div id="task-fields-container">
+              <!-- Динамические поля настройки заданий -->
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-design" class="tab-panel">
+          <div class="form-group">
+            <label data-i18n="fontLbl">Основной шрифт текста:</label>
+            <select id="design-font-select" class="form-control" onchange="app.updateDesign('fontFamily', this.value)">
+              <option value="'Comfortaa', cursive">Comfortaa (Сказочный круглый)</option>
+              <option value="'Marck Script', cursive">Marck Script (Каллиграфия)</option>
+              <option value="'Cinzel', serif">Cinzel (Эпический)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="parchmentColorLbl">Цвет пергамента страницы:</label>
+            <input type="color" id="design-bg-color" value="#fcf8e8" class="form-control" onchange="app.updateDesign('pageBg', this.value)">
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="sloganLbl">Финишный слоган (в конце книги):</label>
+            <input type="text" id="design-slogan" class="form-control" value="Ты истинный Хранитель Сказок!" oninput="app.state.design.slogan = this.value">
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="badgeLbl">Название наградного бейджа:</label>
+            <input type="text" id="design-badge" class="form-control" value="Мудрый Искатель" oninput="app.state.design.badge = this.value">
+          </div>
+        </div>
+
+        <div id="tab-export" class="tab-panel">
+          <div class="form-group">
+            <button class="btn btn-magic btn-block" onclick="app.exportJSON()">
+              <i class="fa-solid fa-download"></i> <span data-i18n="exportJsonBtn">Скачать Проект (JSON)</span>
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label class="btn btn-gold btn-block" style="margin:0; cursor:pointer;">
+              <i class="fa-solid fa-upload"></i> <span data-i18n="importJsonBtn">Загрузить Проект (JSON)</span>
+              <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="app.importJSON(event)">
+            </label>
+          </div>
+
+          <hr style="border-color:rgba(255,215,0,0.1); margin:15px 0;">
+
+          <div class="form-group">
+            <button class="btn btn-gold btn-block" onclick="app.downloadStandaloneHTML()">
+              <i class="fa-solid fa-file-code"></i> <span data-i18n="exportHtmlBtn">Скачать Автономную Книгу (HTML)</span>
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="iframeLbl">IFrame код для вставки (Genially / Сайт):</label>
+            <textarea id="iframe-code-box" class="code-box" readonly></textarea>
+            <button class="btn btn-magic btn-block" style="margin-top:8px;" onclick="app.copyIframeCode()">
+              <i class="fa-solid fa-copy"></i> <span data-i18n="copyIframeBtn">Скопировать iFrame Код</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="mode-bar">
+        <button class="mode-btn active" id="mode-cover-btn" onclick="app.setMode('cover')">
+          <i class="fa-solid fa-book-open-reader"></i> <span data-i18n="modeCover">Обложка</span>
+        </button>
+        <button class="mode-btn" id="mode-edit-btn" onclick="app.setMode('edit')">
+          <i class="fa-solid fa-up-down-left-right"></i> <span data-i18n="modeEdit">Редактирование</span>
+        </button>
+        <button class="mode-btn" id="mode-book-btn" onclick="app.setMode('book')">
+          <i class="fa-solid fa-book"></i> <span data-i18n="modeBook">Книга</span>
+        </button>
+        <button class="mode-btn" id="mode-feedback-btn" onclick="app.setMode('feedback')">
+          <i class="fa-solid fa-trophy"></i> <span data-i18n="modeFeedback">Фидбек</span>
+        </button>
+      </div>
+
+      <div class="canvas-container">
+        <div id="book-stage" class="book-stage"></div>
+
+        <div id="task-modal" class="task-modal-overlay">
+          <div class="task-card">
+            <div id="task-modal-title" class="task-question">Вопрос Задания</div>
+            <div id="task-modal-content"></div>
+            <button class="btn btn-gold btn-block" style="margin-top:15px;" onclick="app.submitTaskAnswer()" data-i18n="checkAnswerBtn">Проверить Ответ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const i18n = {
+      ru: {
+        headerTitle: "Живая Книга | Редактор",
+        headerSub: "Интерактивный Сказочный Конструктор",
+        tabContent: "Контент",
+        tabAudio: "Аудио & TTS",
+        tabTasks: "Задания",
+        tabDesign: "Дизайн",
+        tabExport: "Экспорт",
+        pagesLbl: "Страницы книги",
+        newPageBtn: "Новая страница",
+        delPageBtn: "Удалить",
+        bookTitleLbl: "Заголовок Книги (Обложка):",
+        bookAuthorLbl: "Подзаголовок / Автор:",
+        pageTextLbl: "Текст текущей страницы:",
+        pageImgLbl: "URL Изображения страницы:",
+        ttsVoiceLbl: "Голос озвучки (TTS):",
+        ttsPitchLbl: "Высота голоса (Pitch):",
+        ttsRateLbl: "Скорость речи (Rate):",
+        flipSoundLbl: "Звуковой эффект перелистывания страниц:",
+        volumeLbl: "Глобальная громкость звуков:",
+        testSoundBtn: "Тест Звука",
+        testTtsBtn: "Тест TTS",
+        enableTaskLbl: "Включить задание на этой странице",
+        taskTypeLbl: "Тип задания:",
+        taskQuestionLbl: "Вопрос / Текст задания:",
+        fontLbl: "Основной шрифт текста:",
+        parchmentColorLbl: "Цвет пергамента страницы:",
+        sloganLbl: "Финишный слоган (в конце книги):",
+        badgeLbl: "Название наградного бейджа:",
+        exportJsonBtn: "Скачать Проект (JSON)",
+        importJsonBtn: "Загрузить Проект (JSON)",
+        exportHtmlBtn: "Скачать Автономную Книгу (HTML)",
+        iframeLbl: "IFrame код для вставки (Genially / Сайт):",
+        copyIframeBtn: "Скопировать iFrame Код",
+        modeCover: "Обложка",
+        modeEdit: "Редактирование",
+        modeBook: "Книга",
+        modeFeedback: "Фидбек",
+        checkAnswerBtn: "Проверить Ответ",
+        startJourney: "Начать Путешествие",
+        executeTask: "Выполнить Задание",
+        next: "Далее",
+        restart: "Пройти заново",
+        correctAlert: "✨ Великолепно! Волшебный ответ верен! (+10 баллов)",
+        errorAlert: "🧙 Попробуй ещё раз, магия не сработала!",
+        oralDoneAlert: "🎙️ Устный ответ принят! Отличная работа! (+10 баллов)",
+        bookLoaded: "Книга успешно загружена!",
+        jsonErr: "Ошибка чтения JSON файла!",
+        iframeCopied: "iFrame код скопирован!"
+      },
+      en: {
+        headerTitle: "Living Book | Editor",
+        headerSub: "Interactive Fairytale Constructor",
+        tabContent: "Content",
+        tabAudio: "Audio & TTS",
+        tabTasks: "Tasks",
+        tabDesign: "Design",
+        tabExport: "Export",
+        pagesLbl: "Book Pages",
+        newPageBtn: "New Page",
+        delPageBtn: "Delete",
+        bookTitleLbl: "Book Title (Cover):",
+        bookAuthorLbl: "Subtitle / Author:",
+        pageTextLbl: "Current page text:",
+        pageImgLbl: "Page image URL:",
+        ttsVoiceLbl: "Voice (TTS):",
+        ttsPitchLbl: "Pitch:",
+        ttsRateLbl: "Rate:",
+        flipSoundLbl: "Page Flip Sound Effect:",
+        volumeLbl: "Global Sound Volume:",
+        testSoundBtn: "Test Sound",
+        testTtsBtn: "Test TTS",
+        enableTaskLbl: "Enable task on this page",
+        taskTypeLbl: "Task Type:",
+        taskQuestionLbl: "Question / Task text:",
+        fontLbl: "Main Text Font:",
+        parchmentColorLbl: "Parchment Background Color:",
+        sloganLbl: "Final Slogan (End of book):",
+        badgeLbl: "Reward Badge Title:",
+        exportJsonBtn: "Download Project (JSON)",
+        importJsonBtn: "Upload Project (JSON)",
+        exportHtmlBtn: "Download Standalone Book (HTML)",
+        iframeLbl: "IFrame Code for Embedding (Genially / Web):",
+        copyIframeBtn: "Copy iFrame Code",
+        modeCover: "Cover",
+        modeEdit: "Edit",
+        modeBook: "Book",
+        modeFeedback: "Feedback",
+        checkAnswerBtn: "Check Answer",
+        startJourney: "Start Journey",
+        executeTask: "Execute Task",
+        next: "Next",
+        restart: "Restart",
+        correctAlert: "✨ Magnificent! Magical answer is correct! (+10 points)",
+        errorAlert: "🧙 Try again, the magic didn't work!",
+        oralDoneAlert: "🎙️ Oral response accepted! Great job! (+10 points)",
+        bookLoaded: "Book loaded successfully!",
+        jsonErr: "Error reading JSON file!",
+        iframeCopied: "iFrame code copied!"
+      },
+      de: {
+        headerTitle: "Lebendes Buch | Editor",
+        headerSub: "Interaktiver Märchen-Konstruktor",
+        tabContent: "Inhalt",
+        tabAudio: "Audio & TTS",
+        tabTasks: "Aufgaben",
+        tabDesign: "Design",
+        tabExport: "Export",
+        pagesLbl: "Buchseiten",
+        newPageBtn: "Neue Seite",
+        delPageBtn: "Löschen",
+        bookTitleLbl: "Buchtitel (Cover):",
+        bookAuthorLbl: "Untertitel / Autor:",
+        pageTextLbl: "Text der aktuellen Seite:",
+        pageImgLbl: "Seiten-Bild-URL:",
+        ttsVoiceLbl: "Stimme (TTS):",
+        ttsPitchLbl: "Tonhöhe:",
+        ttsRateLbl: "Sprechtempo:",
+        flipSoundLbl: "Umschlag-Soundeffekt:",
+        volumeLbl: "Gesamtlautstärke:",
+        testSoundBtn: "Sound testen",
+        testTtsBtn: "TTS testen",
+        enableTaskLbl: "Aufgabe auf dieser Seite aktivieren",
+        taskTypeLbl: "Aufgabentyp:",
+        taskQuestionLbl: "Frage / Aufgabentext:",
+        fontLbl: "Schriftart:",
+        parchmentColorLbl: "Pergament-Hintergrundfarbe:",
+        sloganLbl: "Schlussslogan (Ende des Buches):",
+        badgeLbl: "Belohnungsabzeichen:",
+        exportJsonBtn: "Projekt herunterladen (JSON)",
+        importJsonBtn: "Projekt hochladen (JSON)",
+        exportHtmlBtn: "Eigenständiges Buch herunterladen (HTML)",
+        iframeLbl: "IFrame-Code zum Einbetten:",
+        copyIframeBtn: "iFrame-Code kopieren",
+        modeCover: "Cover",
+        modeEdit: "Bearbeiten",
+        modeBook: "Buch",
+        modeFeedback: "Feedback",
+        checkAnswerBtn: "Antwort prüfen",
+        startJourney: "Reise beginnen",
+        executeTask: "Aufgabe ausführen",
+        next: "Weiter",
+        restart: "Neustart",
+        correctAlert: "✨ Großartig! Magische Antwort ist korrekt! (+10 Punkte)",
+        errorAlert: "🧙 Versuche es noch einmal!",
+        oralDoneAlert: "🎙️ Mündliche Antwort akzeptiert! Gut gemacht! (+10 Punkte)",
+        bookLoaded: "Buch erfolgreich geladen!",
+        jsonErr: "Fehler beim Lesen der JSON-Datei!",
+        iframeCopied: "iFrame-Code kopiert!"
+      },
+      fr: {
+        headerTitle: "Livre Vivant | Éditeur",
+        headerSub: "Constructeur de Contes Interactif",
+        tabContent: "Contenu",
+        tabAudio: "Audio & TTS",
+        tabTasks: "Tâches",
+        tabDesign: "Design",
+        tabExport: "Export",
+        pagesLbl: "Pages du livre",
+        newPageBtn: "Nouvelle page",
+        delPageBtn: "Supprimer",
+        bookTitleLbl: "Titre du livre (Couverture):",
+        bookAuthorLbl: "Sous-titre / Auteur:",
+        pageTextLbl: "Texte de la page actuelle:",
+        pageImgLbl: "URL de l'image de la page:",
+        ttsVoiceLbl: "Voix (TTS):",
+        ttsPitchLbl: "Hauteur:",
+        ttsRateLbl: "Vitesse:",
+        flipSoundLbl: "Effet sonore de retournement:",
+        volumeLbl: "Volume global:",
+        testSoundBtn: "Tester le son",
+        testTtsBtn: "Tester TTS",
+        enableTaskLbl: "Activer la tâche sur cette page",
+        taskTypeLbl: "Type de tâche:",
+        taskQuestionLbl: "Question / Texte de la tâche:",
+        fontLbl: "Police principale:",
+        parchmentColorLbl: "Couleur du parchemin:",
+        sloganLbl: "Slogan final:",
+        badgeLbl: "Titre du badge:",
+        exportJsonBtn: "Télécharger le projet (JSON)",
+        importJsonBtn: "Importer le projet (JSON)",
+        exportHtmlBtn: "Télécharger le livre (HTML)",
+        iframeLbl: "Code IFrame:",
+        copyIframeBtn: "Copier le code IFrame",
+        modeCover: "Couverture",
+        modeEdit: "Éditer",
+        modeBook: "Livre",
+        modeFeedback: "Feedback",
+        checkAnswerBtn: "Vérifier la réponse",
+        startJourney: "Commencer le voyage",
+        executeTask: "Exécuter la tâche",
+        next: "Suivant",
+        restart: "Recommencer",
+        correctAlert: "✨ Magnifique ! Bonne réponse magique ! (+10 points)",
+        errorAlert: "🧙 Réessayez, la magie a échoué !",
+        oralDoneAlert: "🎙️ Réponse orale acceptée ! Bon travail ! (+10 points)",
+        bookLoaded: "Livre chargé avec succès !",
+        jsonErr: "Erreur de lecture du fichier JSON !",
+        iframeCopied: "Code iFrame copié !"
+      },
+      it: {
+        headerTitle: "Libro Vivente | Editore",
+        headerSub: "Costruttore di Fiabe Interattivo",
+        tabContent: "Contenuto",
+        tabAudio: "Audio & TTS",
+        tabTasks: "Compiti",
+        tabDesign: "Design",
+        tabExport: "Esporta",
+        pagesLbl: "Pagine del libro",
+        newPageBtn: "Nuova pagina",
+        delPageBtn: "Elimina",
+        bookTitleLbl: "Titolo del libro (Copertina):",
+        bookAuthorLbl: "Sottotitolo / Autore:",
+        pageTextLbl: "Testo della pagina corrente:",
+        pageImgLbl: "URL Immagine pagina:",
+        ttsVoiceLbl: "Voce (TTS):",
+        ttsPitchLbl: "Tonalità:",
+        ttsRateLbl: "Velocità:",
+        flipSoundLbl: "Effetto sonoro cambio pagina:",
+        volumeLbl: "Volume globale:",
+        testSoundBtn: "Test Suono",
+        testTtsBtn: "Test TTS",
+        enableTaskLbl: "Abilita compito in questa pagina",
+        taskTypeLbl: "Tipo di compito:",
+        taskQuestionLbl: "Domanda / Testo del compito:",
+        fontLbl: "Carattere principale:",
+        parchmentColorLbl: "Colore pergamena:",
+        sloganLbl: "Slogan finale:",
+        badgeLbl: "Titolo del badge:",
+        exportJsonBtn: "Scarica Progetto (JSON)",
+        importJsonBtn: "Carica Progetto (JSON)",
+        exportHtmlBtn: "Scarica Libro (HTML)",
+        iframeLbl: "Codice IFrame:",
+        copyIframeBtn: "Copia codice iFrame",
+        modeCover: "Copertina",
+        modeEdit: "Modifica",
+        modeBook: "Libro",
+        modeFeedback: "Feedback",
+        checkAnswerBtn: "Controlla Risposta",
+        startJourney: "Inizia Viaggio",
+        executeTask: "Esegui Compito",
+        next: "Avanti",
+        restart: "Ricomincia",
+        correctAlert: "✨ Magnifico! Risposta corretta! (+10 punti)",
+        errorAlert: "🧙 Riprova!",
+        oralDoneAlert: "🎙️ Risposta orale accettata! Ottimo lavoro! (+10 punti)",
+        bookLoaded: "Libro caricato con successo!",
+        jsonErr: "Errore di lettura JSON!",
+        iframeCopied: "Codice iFrame copiato!"
+      },
+      es: {
+        headerTitle: "Libro Vivo | Editor",
+        headerSub: "Constructor de Cuentos Interactivo",
+        tabContent: "Contenido",
+        tabAudio: "Audio y TTS",
+        tabTasks: "Tareas",
+        tabDesign: "Diseño",
+        tabExport: "Exportar",
+        pagesLbl: "Páginas del libro",
+        newPageBtn: "Nueva página",
+        delPageBtn: "Eliminar",
+        bookTitleLbl: "Título del libro (Portada):",
+        bookAuthorLbl: "Subtítulo / Autor:",
+        pageTextLbl: "Texto de la página actual:",
+        pageImgLbl: "URL de imagen de página:",
+        ttsVoiceLbl: "Voz (TTS):",
+        ttsPitchLbl: "Tono:",
+        ttsRateLbl: "Velocidad:",
+        flipSoundLbl: "Efecto de sonido de página:",
+        volumeLbl: "Volumen global:",
+        testSoundBtn: "Probar sonido",
+        testTtsBtn: "Probar TTS",
+        enableTaskLbl: "Habilitar tarea en esta página",
+        taskTypeLbl: "Tipo de tarea:",
+        taskQuestionLbl: "Pregunta / Texto de tarea:",
+        fontLbl: "Fuente principal:",
+        parchmentColorLbl: "Color de pergamino:",
+        sloganLbl: "Eslogan final:",
+        badgeLbl: "Título de insignia:",
+        exportJsonBtn: "Descargar Proyecto (JSON)",
+        importJsonBtn: "Cargar Proyecto (JSON)",
+        exportHtmlBtn: "Descargar Libro (HTML)",
+        iframeLbl: "Código IFrame:",
+        copyIframeBtn: "Copiar código iFrame",
+        modeCover: "Portada",
+        modeEdit: "Editar",
+        modeBook: "Libro",
+        modeFeedback: "Feedback",
+        checkAnswerBtn: "Verificar Respuesta",
+        startJourney: "Comenzar Viaje",
+        executeTask: "Ejecutar Tarea",
+        next: "Siguiente",
+        restart: "Reiniciar",
+        correctAlert: "✨ ¡Magnífico! ¡Respuesta correcta! (+10 puntos)",
+        errorAlert: "🧙 ¡Inténtalo de nuevo!",
+        oralDoneAlert: "🎙️ ¡Respuesta oral aceptada! ¡Buen trabajo! (+10 puntos)",
+        bookLoaded: "¡Libro cargado con éxito!",
+        jsonErr: "¡Error al leer JSON!",
+        iframeCopied: "¡Código iFrame copiado!"
+      }
+    };
+
+    class BookState {
+      constructor() {
+        this.lang = "ru";
+        this.title = "Тайна Волшебного Леса";
+        this.author = "Сказочник";
+        this.currentPageIndex = 0;
+        this.pages = [
+          {
+            id: 1,
+            text: "Давным-давно в далеком светящемся лесу жил маленький дракончик по имени Искорка.",
+            image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&auto=format&fit=crop&q=60",
+            textPos: { x: 40, y: 40 },
+            imgPos: { x: 450, y: 40 },
+            task: {
+              enabled: true,
+              type: "single",
+              question: "Как звали маленького дракончика?",
+              options: ["Искорка", "Уголек", "Ветерок"],
+              correct: [0],
+              matchPairs: [],
+              inputCorrect: "",
+              selectOptions: [],
+              selectCorrect: 0,
+              embedUrl: ""
+            }
+          }
+        ];
+        this.tts = { voiceIndex: 0, pitch: 1.0, rate: 1.0 };
+        this.soundFX = { type: "parchment" };
+        this.design = {
+          fontFamily: "'Comfortaa', cursive",
+          pageBg: "#fcf8e8",
+          slogan: "Ты истинный Хранитель Сказок!",
+          badge: "Мудрый Искатель"
+        };
+        this.userScore = 0;
+      }
+    }
+
+    class SoundFXManager {
+      constructor() {
+        this.ctx = null;
+        this.volume = 0.8;
+      }
+
+      initCtx() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+
+      setVolume(val) {
+        this.volume = parseFloat(val);
+      }
+
+      playFlip(type) {
+        if (type === 'none') return;
+        this.initCtx();
+        if (type === 'chime') {
+          this.playMagicChime();
+        } else if (type === 'whoosh') {
+          this.playWindWhoosh();
+        } else if (type === 'softpaper') {
+          this.playSoftPaper();
+        } else if (type === 'click') {
+          this.playDigitalClick();
+        } else {
+          this.playParchmentRustle();
+        }
+      }
+
+      playCurrentFlip() {
+        const type = window.app ? window.app.state.soundFX.type : 'parchment';
+        this.playFlip(type);
+      }
+
+      playParchmentRustle() {
+        const bufferSize = this.ctx.sampleRate * 0.35;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1200, this.ctx.currentTime);
+        filter.Q.setValueAtTime(1.5, this.ctx.currentTime);
+
+        const gainNode = this.ctx.createGain();
+        gainNode.gain.setValueAtTime(0.01, this.ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.3 * this.volume, this.ctx.currentTime + 0.1);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
+
+        noise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(this.ctx.destination);
+        noise.start();
+        noise.stop(this.ctx.currentTime + 0.35);
+      }
+
+      playMagicChime() {
+        const now = this.ctx.currentTime;
+        const freqs = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+        freqs.forEach((f, index) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f, now + index * 0.04);
+          gain.gain.setValueAtTime(0, now + index * 0.04);
+          gain.gain.linearRampToValueAtTime(0.15 * this.volume, now + index * 0.04 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.04 + 0.3);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + index * 0.04);
+          osc.stop(now + index * 0.04 + 0.3);
+        });
+      }
+
+      playWindWhoosh() {
+        const now = this.ctx.currentTime;
+        const bufferSize = this.ctx.sampleRate * 0.25;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(200, now);
+        filter.frequency.exponentialRampToValueAtTime(1400, now + 0.12);
+        filter.frequency.exponentialRampToValueAtTime(150, now + 0.25);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.01, now);
+        gain.gain.linearRampToValueAtTime(0.4 * this.volume, now + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start(now);
+        noise.stop(now + 0.25);
+      }
+
+      playSoftPaper() {
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.linearRampToValueAtTime(80, now + 0.2);
+        gain.gain.setValueAtTime(0.2 * this.volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      }
+
+      playDigitalClick() {
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(200, now + 0.05);
+        gain.gain.setValueAtTime(0.15 * this.volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      }
+
+      playSuccess() {
+        this.initCtx();
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          const startTime = this.ctx.currentTime + idx * 0.08;
+          gain.gain.setValueAtTime(0.3 * this.volume, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.3);
+        });
+      }
+
+      playError() {
+        this.initCtx();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(110, this.ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.4 * this.volume, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.3);
+      }
+    }
+
+    class TTSManager {
+      constructor() {
+        this.synth = window.speechSynthesis;
+        this.voices = [];
+        this.speaking = false;
+        this.onBoundaryCallback = null;
+        this.onEndCallback = null;
+        this.loadVoices();
+      }
+
+      loadVoices() {
+        if (!this.synth) return;
+        this.voices = this.synth.getVoices();
+        if (this.synth.onvoiceschanged !== undefined) {
+          this.synth.onvoiceschanged = () => {
+            this.voices = this.synth.getVoices();
+            if (window.app) window.app.populateVoiceList();
+          };
+        }
+      }
+
+      speak(text, config) {
+        if (!this.synth) return;
+        this.stop();
+        const utterance = new SpeechSynthesisUtterance(text);
+        if (this.voices[config.voiceIndex]) {
+          utterance.voice = this.voices[config.voiceIndex];
+        }
+        utterance.pitch = config.pitch || 1.0;
+        utterance.rate = config.rate || 1.0;
+
+        utterance.onboundary = (e) => {
+          if (e.name === 'word' && this.onBoundaryCallback) {
+            this.onBoundaryCallback(e.charIndex, e.charLength);
+          }
+        };
+
+        utterance.onend = () => {
+          this.speaking = false;
+          if (this.onEndCallback) this.onEndCallback();
+        };
+
+        this.speaking = true;
+        this.synth.speak(utterance);
+      }
+
+      stop() {
+        if (this.synth && this.synth.speaking) {
+          this.synth.cancel();
+          this.speaking = false;
+        }
+      }
+    }
+
+    class DragDropManager {
+      constructor(app) {
+        this.app = app;
+        this.activeElement = null;
+        this.offsetX = 0;
+        this.offsetY = 0;
+      }
+
+      attach(element, onMoveCallback) {
+        element.addEventListener('mousedown', (e) => {
+          if (this.app.mode !== 'edit') return;
+          this.activeElement = element;
+          element.classList.add('dragging');
+          const rect = element.getBoundingClientRect();
+          this.offsetX = e.clientX - rect.left;
+          this.offsetY = e.clientY - rect.top;
+
+          const onMouseMove = (moveEv) => {
+            if (!this.activeElement) return;
+            const stageRect = document.getElementById('book-stage').getBoundingClientRect();
+            let newX = moveEv.clientX - stageRect.left - this.offsetX;
+            let newY = moveEv.clientY - stageRect.top - this.offsetY;
+
+            newX = Math.max(0, Math.min(newX, stageRect.width - element.offsetWidth));
+            newY = Math.max(0, Math.min(newY, stageRect.height - element.offsetHeight));
+
+            element.style.left = newX + 'px';
+            element.style.top = newY + 'px';
+            if (onMoveCallback) onMoveCallback(newX, newY);
+          };
+
+          const onMouseUp = () => {
+            if (this.activeElement) {
+              this.activeElement.classList.remove('dragging');
+              this.activeElement = null;
+            }
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+          };
+
+          window.addEventListener('mousemove', onMouseMove);
+          window.addEventListener('mouseup', onMouseUp);
+        });
+      }
+    }
+
+    class LivingBookApp {
+      constructor() {
+        this.state = new BookState();
+        this.soundFX = new SoundFXManager();
+        this.tts = new TTSManager();
+        this.dragDrop = new DragDropManager(this);
+        this.mode = 'cover';
+      }
+
+      init() {
+        this.populateVoiceList();
+        this.renderEditorForm();
+        this.renderStage();
+        this.updateIframeCode();
+        this.applyLanguage();
+      }
+
+      changeLanguage(lang) {
+        this.state.lang = lang;
+        document.getElementById('global-lang-select').value = lang;
+        this.applyLanguage();
+        this.renderEditorForm();
+        this.renderStage();
+      }
+
+      t(key) {
+        const dict = i18n[this.state.lang] || i18n['ru'];
+        return dict[key] || i18n['ru'][key] || key;
+      }
+
+      applyLanguage() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+          const key = el.getAttribute('data-i18n');
+          el.textContent = this.t(key);
+        });
+        document.getElementById('ui-header-title').textContent = this.t('headerTitle');
+        document.getElementById('ui-header-sub').textContent = this.t('headerSub');
+      }
+
+      switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+        const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+        if (targetBtn) targetBtn.classList.add('active');
+
+        const targetPanel = document.getElementById('tab-' + tabId);
+        if (targetPanel) targetPanel.classList.add('active');
+      }
+
+      setMode(newMode) {
+        this.mode = newMode;
+        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`mode-${newMode}-btn`).classList.add('active');
+        this.tts.stop();
+        this.renderStage();
+      }
+
+      populateVoiceList() {
+        const select = document.getElementById('tts-voice-select');
+        if (!select) return;
+        select.innerHTML = '';
+        this.tts.voices.forEach((voice, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          option.textContent = `${voice.name} (${voice.lang})`;
+          select.appendChild(option);
+        });
+      }
+
+      addPage() {
+        if (this.state.pages.length >= 50) return;
+        const newPage = {
+          id: Date.now(),
+          text: "Новая волшебная страница...",
+          image: "",
+          textPos: { x: 40, y: 40 },
+          imgPos: { x: 400, y: 40 },
+          task: {
+            enabled: false,
+            type: "single",
+            question: "",
+            options: [],
+            correct: [],
+            matchPairs: [{left: "", right: ""}],
+            inputCorrect: "",
+            selectOptions: [],
+            selectCorrect: 0,
+            embedUrl: ""
+          }
+        };
+        this.state.pages.push(newPage);
+        this.state.currentPageIndex = this.state.pages.length - 1;
+        this.soundFX.playFlip(this.state.soundFX.type);
+        this.renderEditorForm();
+        this.renderStage();
+      }
+
+      deleteCurrentPage() {
+        if (this.state.pages.length <= 1) return;
+        this.state.pages.splice(this.state.currentPageIndex, 1);
+        if (this.state.currentPageIndex >= this.state.pages.length) {
+          this.state.currentPageIndex = this.state.pages.length - 1;
+        }
+        this.renderEditorForm();
+        this.renderStage();
+      }
+
+      selectPage(index) {
+        this.state.currentPageIndex = index;
+        this.soundFX.playFlip(this.state.soundFX.type);
+        this.renderEditorForm();
+        this.renderStage();
+      }
+
+      renderEditorForm() {
+        document.getElementById('page-count-lbl').textContent = this.state.pages.length;
+        const chipsContainer = document.getElementById('page-chip-list');
+        chipsContainer.innerHTML = '';
+        this.state.pages.forEach((p, idx) => {
+          const chip = document.createElement('div');
+          chip.className = `page-chip ${idx === this.state.currentPageIndex ? 'active' : ''}`;
+          chip.textContent = `Стр. ${idx + 1}`;
+          chip.onclick = () => this.selectPage(idx);
+          chipsContainer.appendChild(chip);
+        });
+
+        const currentPage = this.state.pages[this.state.currentPageIndex];
+        document.getElementById('input-book-title').value = this.state.title;
+        document.getElementById('input-book-author').value = this.state.author;
+        document.getElementById('input-page-text').value = currentPage.text;
+        document.getElementById('input-page-img').value = currentPage.image;
+        document.getElementById('flip-sound-select').value = this.state.soundFX.type;
+
+        const task = currentPage.task;
+        document.getElementById('task-enable-chk').checked = task.enabled;
+        document.getElementById('task-editor-section').style.display = task.enabled ? 'block' : 'none';
+        document.getElementById('task-type-select').value = task.type;
+        document.getElementById('task-question-input').value = task.question;
+
+        this.renderTaskEditorFields(task);
+      }
+
+      renderTaskEditorFields(task) {
+        const container = document.getElementById('task-fields-container');
+        container.innerHTML = '';
+
+        if (task.type === 'single' || task.type === 'multiple') {
+          container.innerHTML = `
+            <div class="form-group">
+              <label>Варианты ответов (каждый с новой строки):</label>
+              <textarea id="task-options-input" class="form-control" placeholder="Вариант 1&#10;Вариант 2" oninput="app.updateTaskData()">${task.options.join('\n')}</textarea>
+            </div>
+            <div class="form-group">
+              <label>Индексы правильных ответов (с 0, через запятую):</label>
+              <input type="text" id="task-correct-input" class="form-control" value="${task.correct.join(',')}" placeholder="0 или 0,2" oninput="app.updateTaskData()">
+            </div>
+          `;
+        } else if (task.type === 'matching') {
+          let rowsHtml = '';
+          if (!task.matchPairs || task.matchPairs.length === 0) task.matchPairs = [{left: '', right: ''}];
+          task.matchPairs.forEach((pair, idx) => {
+            rowsHtml += `
+              <div class="match-row" style="margin-bottom:8px;">
+                <input type="text" class="form-control" value="${pair.left}" placeholder="Левая часть" oninput="app.updateMatchPair(${idx}, 'left', this.value)">
+                <input type="text" class="form-control" value="${pair.right}" placeholder="Правая пара" oninput="app.updateMatchPair(${idx}, 'right', this.value)">
+                <button class="btn btn-danger" onclick="app.removeMatchPair(${idx})"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            `;
+          });
+          container.innerHTML = `
+            <div class="form-group">
+              <label>Пары для сопоставления:</label>
+              ${rowsHtml}
+              <button class="btn btn-magic btn-block" style="margin-top:8px;" onclick="app.addMatchPair()">Добавить пару</button>
+            </div>
+          `;
+        } else if (task.type === 'input') {
+          container.innerHTML = `
+            <div class="form-group">
+              <label>Правильный ответ (текст):</label>
+              <input type="text" id="task-input-correct" class="form-control" value="${task.inputCorrect || ''}" placeholder="Введите точный ответ..." oninput="app.updateTaskData()">
+            </div>
+          `;
+        } else if (task.type === 'select') {
+          container.innerHTML = `
+            <div class="form-group">
+              <label>Варианты в выпадающем списке (каждый с новой строки):</label>
+              <textarea id="task-select-options" class="form-control" placeholder="Вариант 1&#10;Вариант 2" oninput="app.updateTaskData()">${(task.selectOptions || []).join('\n')}</textarea>
+            </div>
+            <div class="form-group">
+              <label>Индекс правильного варианта (с 0):</label>
+              <input type="number" id="task-select-correct" class="form-control" value="${task.selectCorrect || 0}" min="0" oninput="app.updateTaskData()">
+            </div>
+          `;
+        } else if (task.type === 'oral') {
+          container.innerHTML = `
+            <div class="form-group">
+              <p style="font-size: 0.85rem; color: #a090c0;">Игрок дает устный ответ преподавателю/родителям, а затем нажимает кнопку подтверждения.</p>
+            </div>
+          `;
+        } else if (task.type === 'embed') {
+          container.innerHTML = `
+            <div class="form-group">
+              <label>Ссылка или код IFrame (Wordwall, Liveworksheets, видео и т.д.):</label>
+              <input type="text" id="task-embed-url" class="form-control" value="${task.embedUrl || ''}" placeholder="https://wordwall.net/ru/resource/..." oninput="app.updateTaskData()">
+            </div>
+          `;
+        }
+      }
+
+      updateBookInfo() {
+        this.state.title = document.getElementById('input-book-title').value;
+        this.state.author = document.getElementById('input-book-author').value;
+        if (this.mode === 'cover') this.renderStage();
+      }
+
+      updateCurrentPageText() {
+        const text = document.getElementById('input-page-text').value;
+        this.state.pages[this.state.currentPageIndex].text = text;
+        this.renderStage();
+      }
+
+      updateCurrentPageImage() {
+        const url = document.getElementById('input-page-img').value;
+        this.state.pages[this.state.currentPageIndex].image = url;
+        this.renderStage();
+      }
+
+      toggleTaskForPage(enabled) {
+        const page = this.state.pages[this.state.currentPageIndex];
+        page.task.enabled = enabled;
+        document.getElementById('task-editor-section').style.display = enabled ? 'block' : 'none';
+        this.renderStage();
+      }
+
+      updateTaskType(type) {
+        this.state.pages[this.state.currentPageIndex].task.type = type;
+        this.renderTaskEditorFields(this.state.pages[this.state.currentPageIndex].task);
+      }
+
+      updateTaskData() {
+        const task = this.state.pages[this.state.currentPageIndex].task;
+        task.question = document.getElementById('task-question-input').value;
+        if (task.type === 'single' || task.type === 'multiple') {
+          const optEl = document.getElementById('task-options-input');
+          const corEl = document.getElementById('task-correct-input');
+          if (optEl) task.options = optEl.value.split('\n').filter(s => s.trim() !== '');
+          if (corEl) task.correct = corEl.value.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+        } else if (task.type === 'input') {
+          const inEl = document.getElementById('task-input-correct');
+          if (inEl) task.inputCorrect = inEl.value;
+        } else if (task.type === 'select') {
+          const selOpt = document.getElementById('task-select-options');
+          const selCor = document.getElementById('task-select-correct');
+          if (selOpt) task.selectOptions = selOpt.value.split('\n').filter(s => s.trim() !== '');
+          if (selCor) task.selectCorrect = parseInt(selCor.value) || 0;
+        } else if (task.type === 'embed') {
+          const emb = document.getElementById('task-embed-url');
+          if (emb) task.embedUrl = emb.value;
+        }
+      }
+
+      addMatchPair() {
+        const task = this.state.pages[this.state.currentPageIndex].task;
+        if (!task.matchPairs) task.matchPairs = [];
+        task.matchPairs.push({left: '', right: ''});
+        this.renderTaskEditorFields(task);
+      }
+
+      removeMatchPair(idx) {
+        const task = this.state.pages[this.state.currentPageIndex].task;
+        task.matchPairs.splice(idx, 1);
+        this.renderTaskEditorFields(task);
+      }
+
+      updateMatchPair(idx, field, val) {
+        const task = this.state.pages[this.state.currentPageIndex].task;
+        task.matchPairs[idx][field] = val;
+      }
+
+      updateDesign(prop, val) {
+        this.state.design[prop] = val;
+        this.renderStage();
+      }
+
+      testTTS() {
+        const page = this.state.pages[this.state.currentPageIndex];
+        this.tts.speak(page.text || "Привет! Это проверка волшебного голоса.", this.state.tts);
+      }
+
+      renderStage() {
+        const stage = document.getElementById('book-stage');
+        stage.style.backgroundColor = this.state.design.pageBg;
+        stage.style.fontFamily = this.state.design.fontFamily;
+        stage.innerHTML = '';
+
+        if (this.mode === 'cover') {
+          stage.innerHTML = `
+            <div class="cover-view">
+              <div class="cover-title">${this.state.title}</div>
+              <div class="cover-subtitle">${this.state.author}</div>
+              <button class="btn btn-gold" onclick="app.setMode('book')" style="font-size:1.1rem; padding:15px 30px;">
+                <i class="fa-solid fa-wand-sparkles"></i> ${this.t('startJourney')}
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        if (this.mode === 'feedback') {
+          stage.innerHTML = `
+            <div class="feedback-view">
+              <div class="badge-icon"><i class="fa-solid fa-award"></i></div>
+              <h2 style="font-family:var(--font-title); color:var(--primary-gold); font-size:2rem; margin-bottom:10px;">
+                ${this.state.design.badge}
+              </h2>
+              <p style="font-size:1.2rem; margin-bottom:20px;">${this.state.design.slogan}</p>
+              <p style="font-size:1rem; color:#a090c0; margin-bottom:30px;">
+                Магические очки / Score: <strong>${this.state.userScore}</strong>
+              </p>
+              <button class="btn btn-magic" onclick="app.state.userScore=0; app.setMode('cover');">
+                <i class="fa-solid fa-rotate-right"></i> ${this.t('restart')}
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        const curPage = this.state.pages[this.state.currentPageIndex];
+
+        const textElem = document.createElement('div');
+        textElem.className = 'canvas-element page-text-render';
+        textElem.id = 'render-text-elem';
+        textElem.style.left = curPage.textPos.x + 'px';
+        textElem.style.top = curPage.textPos.y + 'px';
+        textElem.innerHTML = curPage.text;
+        stage.appendChild(textElem);
+
+        if (curPage.image) {
+          const imgElem = document.createElement('div');
+          imgElem.className = 'canvas-element';
+          imgElem.style.left = curPage.imgPos.x + 'px';
+          imgElem.style.top = curPage.imgPos.y + 'px';
+          imgElem.style.maxWidth = '350px';
+          imgElem.style.maxHeight = '350px';
+          imgElem.innerHTML = `<img src="${curPage.image}" class="page-img-render" alt="Page visual">`;
+          stage.appendChild(imgElem);
+
+          if (this.mode === 'edit') {
+            this.dragDrop.attach(imgElem, (x, y) => { curPage.imgPos = { x, y }; });
+          }
+        }
+
+        if (this.mode === 'edit') {
+          this.dragDrop.attach(textElem, (x, y) => { curPage.textPos = { x, y }; });
+        }
+
+        if (curPage.task && curPage.task.enabled) {
+          const taskBtn = document.createElement('button');
+          taskBtn.className = 'trigger-task-btn';
+          taskBtn.style.position = 'absolute';
+          taskBtn.style.bottom = '80px';
+          taskBtn.style.left = '50%';
+          taskBtn.style.transform = 'translateX(-50%)';
+          taskBtn.innerHTML = `<i class="fa-solid fa-sparkles"></i> ${this.t('executeTask')}`;
+          taskBtn.onclick = () => this.openTaskModal(curPage.task);
+          stage.appendChild(taskBtn);
+        }
+
+        const controls = document.createElement('div');
+        controls.className = 'book-controls';
+        controls.innerHTML = `
+          <button class="nav-btn" onclick="app.prevPage()"><i class="fa-solid fa-arrow-left"></i></button>
+          <div style="display:flex; gap:10px;">
+            <button class="nav-btn" onclick="app.readPageTTS()"><i class="fa-solid fa-volume-high"></i></button>
+          </div>
+          <button class="nav-btn" onclick="app.nextPage()"><i class="fa-solid fa-arrow-right"></i></button>
+        `;
+        stage.appendChild(controls);
+      }
+
+      readPageTTS() {
+        const curPage = this.state.pages[this.state.currentPageIndex];
+        const textElem = document.getElementById('render-text-elem');
+        if (!textElem) return;
+
+        this.tts.onBoundaryCallback = (charIndex, charLength) => {
+          const fullText = curPage.text;
+          const before = fullText.substring(0, charIndex);
+          const word = fullText.substring(charIndex, charIndex + charLength);
+          const after = fullText.substring(charIndex + charLength);
+          textElem.innerHTML = `${before}<span class="highlight-word">${word}</span>${after}`;
+        };
+
+        this.tts.onEndCallback = () => {
+          textElem.innerHTML = curPage.text;
+        };
+
+        this.tts.speak(curPage.text, this.state.tts);
+      }
+
+      prevPage() {
+        if (this.state.currentPageIndex > 0) {
+          this.state.currentPageIndex--;
+          this.soundFX.playFlip(this.state.soundFX.type);
+          this.renderStage();
+        }
+      }
+
+      nextPage() {
+        if (this.state.currentPageIndex < this.state.pages.length - 1) {
+          this.state.currentPageIndex++;
+          this.soundFX.playFlip(this.state.soundFX.type);
+          this.renderStage();
+        } else {
+          this.setMode('feedback');
+        }
+      }
+
+      openTaskModal(task) {
+        const modal = document.getElementById('task-modal');
+        document.getElementById('task-modal-title').textContent = task.question || "Задание";
+        const contentBox = document.getElementById('task-modal-content');
+        contentBox.innerHTML = '';
+
+        if (task.type === 'single' || task.type === 'multiple') {
+          const inputType = task.type === 'single' ? 'radio' : 'checkbox';
+          task.options.forEach((opt, idx) => {
+            const optDiv = document.createElement('label');
+            optDiv.className = 'task-option';
+            optDiv.innerHTML = `
+              <input type="${inputType}" name="task-opt" value="${idx}">
+              <span>${opt}</span>
+            `;
+            contentBox.appendChild(optDiv);
+          });
+        } else if (task.type === 'matching') {
+          let html = '<div class="match-container">';
+          const shuffledRight = [...(task.matchPairs || [])].sort(() => Math.random() - 0.5);
+          task.matchPairs.forEach((pair, idx) => {
+            let selectOptionsHtml = '<option value="">-- выберите пару --</option>';
+            shuffledRight.forEach((rPair, rIdx) => {
+              selectOptionsHtml += `<option value="${rPair.right}">${rPair.right}</option>`;
+            });
+            html += `
+              <div class="match-row">
+                <span>${pair.left}</span>
+                <select class="form-control match-select" data-index="${idx}" data-correct="${pair.right}">
+                  ${selectOptionsHtml}
+                </select>
+              </div>
+            `;
+          });
+          html += '</div>';
+          contentBox.innerHTML = html;
+        } else if (task.type === 'input') {
+          contentBox.innerHTML = `
+            <div class="form-group">
+              <input type="text" id="task-user-input" class="form-control" placeholder="Введите ваш ответ...">
+            </div>
+          `;
+        } else if (task.type === 'select') {
+          let opts = '<option value="">-- выберите вариант --</option>';
+          (task.selectOptions || []).forEach((opt, idx) => {
+            opts += `<option value="${idx}">${opt}</option>`;
+          });
+          contentBox.innerHTML = `
+            <div class="form-group">
+              <select id="task-user-select" class="form-control">${opts}</select>
+            </div>
+          `;
+        } else if (task.type === 'oral') {
+          contentBox.innerHTML = `
+            <div class="form-group" style="text-align:center; padding: 20px;">
+              <p style="margin-bottom: 15px; color: var(--primary-gold);">Произнесите ответ вслух проверяющему!</p>
+              <button class="btn btn-magic" onclick="app.submitOralAnswer()">Дан устный ответ</button>
+            </div>
+          `;
+          // Для устного отвечать кнопкой внутри, поэтому скроем глобальную кнопку проверки в модалке если нужно, или обработаем отдельно
+          document.querySelector('#task-modal .btn-gold').style.display = 'none';
+          modal.classList.add('active');
+          return;
+        } else if (task.type === 'embed') {
+          let embedSrc = task.embedUrl || '';
+          if (embedSrc.includes('wordwall.net') && !embedSrc.includes('/embed')) {
+            embedSrc = embedSrc.replace('/resource/', '/embed/');
+          }
+          contentBox.innerHTML = `
+            <div style="width:100%; height:320px;">
+              <iframe src="${embedSrc}" width="100%" height="100%" style="border:none; border-radius:8px;" allowfullscreen></iframe>
+            </div>
+          `;
+          document.querySelector('#task-modal .btn-gold').style.display = 'block';
+          modal.classList.add('active');
+          return;
+        }
+
+        document.querySelector('#task-modal .btn-gold').style.display = 'block';
+        modal.classList.add('active');
+      }
+
+      submitOralAnswer() {
+        this.soundFX.playSuccess();
+        this.state.userScore += 10;
+        alert(this.t('oralDoneAlert'));
+        document.getElementById('task-modal').classList.remove('active');
+      }
+
+      submitTaskAnswer() {
+        const curPage = this.state.pages[this.state.currentPageIndex];
+        const task = curPage.task;
+        let isCorrect = false;
+
+        if (task.type === 'single' || task.type === 'multiple') {
+          const selected = Array.from(document.querySelectorAll('input[name="task-opt"]:checked')).map(i => parseInt(i.value));
+          isCorrect = selected.length === task.correct.length && selected.every(val => task.correct.includes(val));
+        } else if (task.type === 'matching') {
+          const selects = document.querySelectorAll('.match-select');
+          let allMatch = true;
+          selects.forEach(sel => {
+            if (sel.value !== sel.getAttribute('data-correct')) {
+              allMatch = false;
+            }
+          });
+          isCorrect = allMatch && selects.length > 0;
+        } else if (task.type === 'input') {
+          const val = document.getElementById('task-user-input').value.trim();
+          isCorrect = val.toLowerCase() === (task.inputCorrect || '').trim().toLowerCase();
+        } else if (task.type === 'select') {
+          const val = parseInt(document.getElementById('task-user-select').value);
+          isCorrect = val === task.selectCorrect;
+        } else if (task.type === 'embed') {
+          isCorrect = true; // Считаем просмотренным/пройденным
+        }
+
+        if (isCorrect) {
+          this.soundFX.playSuccess();
+          this.state.userScore += 10;
+          alert(this.t('correctAlert'));
+        } else {
+          this.soundFX.playError();
+          alert(this.t('errorAlert'));
+        }
+
+        document.getElementById('task-modal').classList.remove('active');
+      }
+
+      exportJSON() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state, null, 2));
+        const dlAnchor = document.createElement('a');
+        dlAnchor.setAttribute("href", dataStr);
+        dlAnchor.setAttribute("download", `${this.state.title.replace(/\s+/g, '_')}_living_book.json`);
+        document.body.appendChild(dlAnchor);
+        dlAnchor.click();
+        dlAnchor.remove();
+      }
+
+      importJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const importedState = JSON.parse(e.target.result);
+            this.state = Object.assign(new BookState(), importedState);
+            this.applyLanguage();
+            this.renderEditorForm();
+            this.renderStage();
+            alert(this.t('bookLoaded'));
+          } catch (err) {
+            alert(this.t('jsonErr'));
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      updateIframeCode() {
+        const code = `<iframe srcdoc="${this.generateStandaloneHTML().replace(/"/g, '&quot;')}" width="800" height="600" style="border:none; border-radius:12px;" allow="autoplay"></iframe>`;
+        document.getElementById('iframe-code-box').value = code;
+      }
+
+      copyIframeCode() {
+        this.updateIframeCode();
+        const copyText = document.getElementById("iframe-code-box");
+        copyText.select();
+        document.execCommand("copy");
+        alert(this.t('iframeCopied'));
+      }
+
+      generateStandaloneHTML() {
+        return `<!DOCTYPE html>
+<html lang="${this.state.lang}">
+<head>
+  <meta charset="UTF-8">
+  <title>${this.state.title}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Comfortaa:wght@400;700&family=Marck+Script&display=swap" rel="stylesheet">
+  <style>
+    body { margin:0; padding:0; background:#05030a; display:flex; justify-content:center; align-items:center; height:100vh; font-family:${this.state.design.fontFamily}; }
+    .stage { width:800px; height:550px; background:${this.state.design.pageBg}; border-radius:12px; position:relative; overflow:hidden; box-shadow:0 0 30px rgba(0,0,0,0.8); }
+    .text { position:absolute; font-size:1.2rem; color:#2c1810; white-space:pre-wrap; }
+    .img { position:absolute; max-width:350px; border-radius:8px; }
+    .btn { background:linear-gradient(135deg, #ffd700, #f39c12); border:none; padding:10px 20px; border-radius:20px; font-weight:bold; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <div class="stage" id="player"></div>
+  <script>
+    const state = ${JSON.stringify(this.state)};
+    let pageIdx = 0;
+    function render() {
+      const p = state.pages[pageIdx];
+      document.getElementById('player').innerHTML = \`
+        <div class="text" style="left:\${p.textPos.x}px; top:\${p.textPos.y}px">\${p.text}</div>
+        \${p.image ? \`<img src="\${p.image}" class="img" style="left:\${p.imgPos.x}px; top:\${p.imgPos.y}px">\` : ''}
+        <button class="btn" style="position:absolute; bottom:20px; right:20px;" onclick="next()">Далее</button>
+      \`;
+    }
+    function next() {
+      if(pageIdx < state.pages.length - 1) { pageIdx++; render(); }
+      else { alert(state.design.slogan); }
+    }
+    render();
+  <\/script>
+</body>
+</html>`;
+      }
+
+      downloadStandaloneHTML() {
+        const htmlContent = this.generateStandaloneHTML();
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${this.state.title.replace(/\s+/g, '_')}.html`;
+        a.click();
+      }
+    }
+
+    window.onload = () => {
+      window.app = new LivingBookApp();
+      window.app.init();
+    };
+  </script>
+</body>
+</html>
